@@ -2,7 +2,7 @@
 ---
 Basic (unoptimized) LoRA implementation done for a seminar presentation.
 In `train.py` a pretrained `DistilBert`-model is trained on a reduced version of the `IMDB sentiment analysis` dataset.
----
+
 We train three times:
 
 1. Fully fine-tuned (FFT)
