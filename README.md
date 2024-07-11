@@ -21,7 +21,8 @@ These are the results:
 | DistilBert (LoRA)  | 516,096          | 0.8980   | 0.8950    | 0.8719    | 29.44            |
 
 The training was done on an Apple M2, with MPS. The higher training time for the LoRA fine-tuning likely stems from the code being far from optimized (currently).
-*trained on full dataset, while the rest of the models were trained on only 10%.
+
+* trained on full dataset, while the rest of the models were trained on only 10%.
 ---
 
 Run the training script with
