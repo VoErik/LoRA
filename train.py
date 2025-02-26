@@ -1,15 +1,17 @@
-from transformers import AutoTokenizer
-from transformers import AutoModelForSequenceClassification
-from utils import Trainer, setup_dataloaders, tokenization
-import torch.nn as nn
-import torch
-from lora_engine import replace_modules_with_lora
 import time
 import warnings
 import argparse
 
-warnings.filterwarnings('ignore')
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
+from src.utils import Trainer, setup_dataloaders, tokenization
+from src.lora_engine import replace_modules_with_lora
+
+
+warnings.filterwarnings('ignore')
 
 def get_device():
     if torch.backends.mps.is_available():
@@ -20,16 +22,31 @@ def get_device():
         return 'cpu'
 
 
-def load_base_model(model_name, num_labels=2):
+def load_base_model(
+        model_name: str,
+        num_labels: int = 2,
+        verbose: bool = True
+    ) -> AutoModelForSequenceClassification:
+    """Loads sequence classification model and prints number of trainable parameters to the console."""
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name, num_labels=num_labels)
-    base_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print("\nTrainable Parameters:")
-    print("Base trainable: ", base_trainable, "(100%)")
+    if verbose:
+        base_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print("\nTrainable Parameters:")
+        print("Base trainable: ", base_trainable, "(100%)")
     return model
 
 
-def train_model(model, train_loader, val_loader, test_loader, tokenizer, lr, num_epochs, device):
+def train_model(
+        model,
+        train_loader: Dataloader,
+        val_loader: Dataloader, 
+        test_loader: Dataloader, 
+        tokenizer: AutoTokenizer, 
+        lr: float = 1e-5, 
+        num_epochs: int = 5, 
+        device: str = 'cpu'
+    ) -> None:
     """Trains model with given parameters and times it."""
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
@@ -71,7 +88,7 @@ if __name__ == '__main__':
     model = load_base_model(args.model_name)
     base_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    if args.task == 'cls':
+    if args.task == 'cls': # classification head finetuning
         for param in model.parameters():
             param.requires_grad = False
         for param in model.pre_classifier.parameters():
